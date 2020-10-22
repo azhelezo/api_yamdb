@@ -1,15 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
-from django.utils.crypto import get_random_string
-from rest_framework import viewsets, status
-from rest_framework.authtoken.models import Token
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import User
-from .serializers import UserSerializer
 from .permissions import IsAdmin
-import re
+from .serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -21,32 +20,44 @@ class UserViewSet(viewsets.ModelViewSet):
 
 @api_view(['POST', ])
 def signup(request):
-    # username = re.sub(r'(\S+)@', )
-    user, new_user = User.objects.get_or_create(
-        email=request.POST['email'],
-        defaults={
-            'username': request.POST['email'],
-            'role': 'user'
-        }
-        )
-    code = get_random_string(length=32)
+    email = request.POST['email']
+    if not User.objects.filter(email=email).exists():
+        username = email.split('@')[0]
+        user = User.objects.create(username=username, email=email)
+    else:
+        user = User.objects.filter(email=email).first()
+    code = default_token_generator.make_token(user)
     mail.send_mail(
         subject='Your YaMDb confirmation code',
         message=f'"confirmation_code": "{code}"',
         from_email='admin@yamdb.com',
-        recipient_list=[user.email, ],
+        recipient_list=[email, ],
         fail_silently=True
         )
     print(code)
-    return Response(data={'email': user.email}, status=status.HTTP_200_OK)
+    return Response(data={'email': email}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST', ])
 def login(request):
     email = request.POST['email']
     confirmation_code = request.POST['confirmation_code']
-    if email is not None and confirmation_code is not None:
-        user = get_object_or_404(User, email=email)
-        print(user)
-        token, created = Token.objects.get_or_create(user=user)
-        return Response(data={'token': token}, status=status.HTTP_200_OK)
+    user = User.objects.filter(email=email).first()
+    data = {'field_name': []}
+    if user is None:
+        data['field_name'].append('email')
+    if not default_token_generator.check_token(user, confirmation_code):
+        data['field_name'].append('confirmation_code')
+    if len(data['field_name']) != 0:
+        return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+    token = RefreshToken.for_user(user)
+    return Response(data={'token': str(token.access_token)}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', ])
+def self(request):
+    data = {
+        'user': str(request.user),
+        'role': str(request.user.role)
+    }
+    return Response(data=data, status=status.HTTP_200_OK)
