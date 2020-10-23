@@ -3,23 +3,24 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None):
+    def create_user(self, email, username=None, password=None):
         if not email:
             raise ValueError('Users must have an email address')
-        if not username:
+        if username is None:
             username = email.split('@')[0]
 
         user = self.model(
             email=self.normalize_email(email),
+            username=username,
         )
 
         user.save(using=self._db)
         return user
 
-    def create_staffuser(self, email, username, password=None):
+    def create_staffuser(self, email, username=None, password=None):
         if not email:
             raise ValueError('Users must have an email address')
-        if not username:
+        if username is None:
             username = email.split('@')[0]
 
         user = self.create_user(
@@ -30,10 +31,10 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, password=None):
+    def create_superuser(self, email, username=None, password=None):
         if not email:
             raise ValueError('Users must have an email address')
-        if not username:
+        if username is None:
             username = email.split('@')[0]
         user = self.create_user(
             email,
@@ -46,7 +47,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     username = models.CharField(max_length=100, null=False, blank=False, unique=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     bio = models.TextField(max_length=1000)
