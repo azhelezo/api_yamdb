@@ -5,10 +5,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import get_object_or_404
 
 from api.permissions import IsAdmin
-from api.serializers import UserSerializer
+from api.serializers import UserSerializer, TitleSerializer, CategorySerializer, GenreSerializer
 from users.models import User
+from .models import Titles, Category, Genre
+from django.core.exceptions import PermissionDenied
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -69,3 +72,35 @@ def login(request):
         return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
     token = RefreshToken.for_user(user)
     return Response(data={'token': str(token.access_token)}, status=status.HTTP_200_OK)
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Titles.objects.all()
+    serializer_class = TitleSerializer
+
+    def perform_create(self, serializer):
+        permission_classes = [IsAuthenticated, IsAdmin]
+        serializer.save()
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    #queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        title = get_object_or_404(Titles, pk=self.kwargs.get("title_id"))
+        return title.category.all()
+
+    def perform_create(self, serializer):
+        permission_classes = [IsAuthenticated, IsAdmin]
+        serializer.save(category=request.data)
+        raise PermissionDenied('PermissionDenied', 401)
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    lookup_field = 'slug'
+
+    def perform_create(self, serializer):
+        permission_classes = [IsAuthenticated, IsAdmin]
+        serializer.save(genre=request.data)
+        raise PermissionDenied('PermissionDenied', 401)
