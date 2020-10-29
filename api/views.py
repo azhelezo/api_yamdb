@@ -2,6 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -88,22 +89,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Titles, pk=self.kwargs.get('title_id'))
         return title.reviews.all()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def perform_create(self, serializer):
         title = get_object_or_404(Titles, pk=self.kwargs.get('title_id'))
         if title.reviews.filter(author=self.request.user).exists():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            raise ValidationError(detail='Only one review is allowed')
         serializer.save(title=title, author=self.request.user)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
