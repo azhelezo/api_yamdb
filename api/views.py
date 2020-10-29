@@ -1,18 +1,19 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, mixins, views, filters
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter 
 
-from api.permissions import IsAdmin
-from api.serializers import UserSerializer, TitleSerializer, CategorySerializer, GenreSerializer
+from api.permissions import IsAdmin, IsAdminOrReadOnly
+from api.serializers import UserSerializer, TitleViewSerializer, TitlePostSerializer, CategoriesSerializer, GenreSerializer
 from users.models import User
-from .models import Titles, Category, Genre
-from django.core.exceptions import PermissionDenied
-
+from .models import Title, Categories, Genre
+from rest_framework.pagination import PageNumberPagination
+from .filters import TitlesFilter, GenresFilter, CategoriesFilter
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -73,34 +74,44 @@ def login(request):
     token = RefreshToken.for_user(user)
     return Response(data={'token': str(token.access_token)}, status=status.HTTP_200_OK)
 
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
-    serializer_class = TitleSerializer
 
-    def perform_create(self, serializer):
-        permission_classes = [IsAuthenticated, IsAdmin]
-        serializer.save()
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    #queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    lookup_field = 'slug'
-
-    def get_queryset(self):
-        title = get_object_or_404(Titles, pk=self.kwargs.get("title_id"))
-        return title.category.all()
-
-    def perform_create(self, serializer):
-        permission_classes = [IsAuthenticated, IsAdmin]
-        serializer.save(category=request.data)
-        raise PermissionDenied('PermissionDenied', 401)
-
-class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all()
+class GenreViewSet(mixins.CreateModelMixin,
+                    mixins.DestroyModelMixin,
+                    mixins.ListModelMixin,
+                    viewsets.GenericViewSet):
     serializer_class = GenreSerializer
+    queryset = Genre.objects.all()
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly)
+    filter_backends = [filters.SearchFilter]
+    filterset_class = GenresFilter
+    search_fields = ('name', 'slug')
     lookup_field = 'slug'
 
-    def perform_create(self, serializer):
-        permission_classes = [IsAuthenticated, IsAdmin]
-        serializer.save(genre=request.data)
-        raise PermissionDenied('PermissionDenied', 401)
+class CategoriesViewSet(mixins.CreateModelMixin,
+                    mixins.DestroyModelMixin,
+                    mixins.ListModelMixin,
+                    viewsets.GenericViewSet):
+    serializer_class = CategoriesSerializer
+    queryset = Categories.objects.all()
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly)
+    filter_backends = [filters.SearchFilter]
+    filterset_class = CategoriesFilter
+    search_fields = ('name', 'slug')
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    serializer_class = TitlePostSerializer
+    queryset = Title.objects.all()
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitlesFilter
+    search_fields = ('name', 'year')
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve' or self.action == 'list':
+            return TitleViewSerializer
+        return TitlePostSerializer

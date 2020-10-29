@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from users.models import User
-from .models import Titles, Category, Genre
+from .models import Title, Categories, Genre
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -16,25 +16,35 @@ class UserSerializer(serializers.ModelSerializer):
             }
 
 
-class TitleSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Titles
-        fields = '__all__'
-
-
-class CategorySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Category
-        fields = '__all__'
-        lookup_field = 'slug'
-        extra_kwargs = {'url': {'lookup_field': 'slug'}}
-
 class GenreSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre
+        lookup_field = 'slug'
+
+
+class CategoriesSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        fields = ('name', 'slug')
+        model = Categories
+        lookup_field = 'slug'
+
+
+class TitleViewSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategoriesSerializer(read_only=True)
 
     class Meta:
-        model = Genre
         fields = '__all__'
-        lookup_field = 'slug'
-        extra_kwargs = {'url': {'lookup_field': 'slug'}}
+        model = Title
+
+
+class TitlePostSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(slug_field='slug', many=True, queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(slug_field='slug', queryset=Categories.objects.all())
+
+    class Meta:
+        fields = '__all__'
+        model = Title

@@ -2,22 +2,33 @@ from django.db import models
 
 
 class Genre(models.Model):
-    genre = models.CharField("Genre", max_length=100)
-    slug = models.SlugField(blank=False, unique=True)
-
-class Category(models.Model):
-    category = models.CharField("Genre", max_length=100)
-    slug = models.SlugField(blank=False, unique=True)
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    searh_fields = ['slug']
     
-       
-class Titles(models.Model):
-    name = models.CharField("Title", max_length=200)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    year = models.DateTimeField("Release date", auto_now_add=True, db_index=True)
+    class Meta:
+        ordering = ['-id']
 
-#class GenreTitle(models.Model):
-#    title_id = models.IntegerField()
-#    genre_id = models.IntegerField()
+class Categories(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    searh_fields = ['slug']
 
+    class Meta:
+        ordering = ['-id']
 
+class Title(models.Model):
+    name = models.CharField(max_length=100)
+    year = models.IntegerField(blank=True, null=True)
+    description = models.TextField()
+    genre = models.ManyToManyField(Genre, blank=True)
+    category = models.ForeignKey(
+        Categories,
+        on_delete=models.PROTECT,
+        related_name='category',
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['-id']
 
