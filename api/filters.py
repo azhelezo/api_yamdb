@@ -1,5 +1,7 @@
 from django_filters import rest_framework as filters
-from .models import Title, Genre, Categories
+
+from .models import Categories, Genre, Title
+
 
 class TitlesFilter(filters.FilterSet):
     genre = filters.CharFilter(
