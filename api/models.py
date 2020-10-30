@@ -8,7 +8,7 @@ class Genre(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
     searh_fields = ['slug']
-    
+
     class Meta:
         ordering = ['-id']
 
@@ -38,13 +38,9 @@ class Title(models.Model):
         ordering = ['-id']
 
 
-class Titles(models.Model):
-    name = models.CharField(max_length=30)
-
-
 class Review(models.Model):
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
