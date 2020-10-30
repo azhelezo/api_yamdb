@@ -33,6 +33,7 @@ class Title(models.Model):
         related_name='category',
         blank=True
     )
+    rating = models.IntegerField(null=True, default=None)
 
     class Meta:
         ordering = ['-id']
@@ -57,6 +58,9 @@ class Review(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)])
     pub_date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-pub_date']
+
 
 class Comment(models.Model):
     review = models.ForeignKey(
@@ -74,3 +78,6 @@ class Comment(models.Model):
         related_name='comments'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-pub_date']

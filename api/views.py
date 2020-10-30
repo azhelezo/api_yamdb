@@ -1,5 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
@@ -81,10 +82,14 @@ def login(request):
     return Response(data={'token': str(token.access_token)}, status=status.HTTP_200_OK)
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   viewsets.GenericViewSet):
+class CreateListDestroyViewSet(mixins.CreateModelMixin,
+                               mixins.DestroyModelMixin,
+                               mixins.ListModelMixin,
+                               viewsets.GenericViewSet):
+    pass
+
+
+class GenreViewSet(CreateListDestroyViewSet):
     serializer_class = GenreSerializer
     queryset = Genre.objects.all()
     pagination_class = PageNumberPagination
@@ -95,10 +100,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     lookup_field = 'slug'
 
 
-class CategoriesViewSet(mixins.CreateModelMixin,
-                        mixins.DestroyModelMixin,
-                        mixins.ListModelMixin,
-                        viewsets.GenericViewSet):
+class CategoriesViewSet(CreateListDestroyViewSet):
     serializer_class = CategoriesSerializer
     queryset = Category.objects.all()
     pagination_class = PageNumberPagination
@@ -122,6 +124,12 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve' or self.action == 'list':
             return TitleViewSerializer
         return TitlePostSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.rating = instance.reviews.all().aggregate(Avg('score'))['score__avg']
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
