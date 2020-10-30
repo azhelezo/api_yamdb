@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from users.models import User
 
-from .models import Categories, Genre, Title, Comment, Review
+from .models import Category, Comment, Genre, Review, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('name', 'slug')
-        model = Categories
+        model = Category
         lookup_field = 'slug'
 
 
@@ -44,7 +44,7 @@ class TitleViewSerializer(serializers.ModelSerializer):
 
 class TitlePostSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(slug_field='slug', many=True, queryset=Genre.objects.all())
-    category = serializers.SlugRelatedField(slug_field='slug', queryset=Categories.objects.all())
+    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
 
     class Meta:
         fields = '__all__'

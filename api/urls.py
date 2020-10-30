@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from users.urls import users_router
+
 from .views import (CategoriesViewSet, CommentViewSet, GenreViewSet,
                     ReviewViewSet, TitleViewSet, view_self)
 

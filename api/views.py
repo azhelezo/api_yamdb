@@ -1,10 +1,9 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, views, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
@@ -15,12 +14,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from users.models import User
 
 from .filters import CategoriesFilter, GenresFilter, TitlesFilter
-from .models import Categories, Genre, Review, Title
+from .models import Category, Genre, Review, Title
 from .permissions import IsAdmin, IsAdminOrReadOnly, ReviewCommentPermission
 from .serializers import (CategoriesSerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
-                          TitlePostSerializer, TitleSerializer,
-                          TitleViewSerializer, UserSerializer)
+                          TitlePostSerializer, TitleViewSerializer,
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -101,7 +100,7 @@ class CategoriesViewSet(mixins.CreateModelMixin,
                         mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = CategoriesSerializer
-    queryset = Categories.objects.all()
+    queryset = Category.objects.all()
     pagination_class = PageNumberPagination
     permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly)
     filter_backends = [filters.SearchFilter]

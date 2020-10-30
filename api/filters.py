@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from .models import Categories, Genre, Title
+from .models import Category, Genre, Title
 
 
 class TitlesFilter(filters.FilterSet):
@@ -16,6 +16,7 @@ class TitlesFilter(filters.FilterSet):
     name = filters.CharFilter(
         lookup_expr="contains",
     )
+
     class Meta:
         model = Title
         fields = ['genre', 'category', 'year', 'name']
@@ -25,15 +26,17 @@ class GenresFilter(filters.FilterSet):
     name = filters.CharFilter(
         field_name='name'
     )
+
     class Meta:
         model = Genre
         fields = ['name']
-        
+
 
 class CategoriesFilter(filters.FilterSet):
     name = filters.CharFilter(
         field_name='name'
     )
+
     class Meta:
-        model = Categories
+        model = Category
         fields = ['name']
