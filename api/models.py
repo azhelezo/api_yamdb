@@ -43,20 +43,25 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
+        verbose_name='reviewed title',
         related_name='reviews'
     )
     text = models.TextField(
+        'review text',
         blank=False,
         help_text='Напишите ваш отзыв'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='review author',
         related_name='reviews'
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)])
-    pub_date = models.DateTimeField(auto_now_add=True)
+        'review score',
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    pub_date = models.DateTimeField('review date', auto_now_add=True)
 
     class Meta:
         ordering = ['-pub_date']
@@ -66,18 +71,21 @@ class Comment(models.Model):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
+        verbose_name='commented review',
         related_name='comments'
     )
     text = models.TextField(
+        'comment text',
         blank=False,
         help_text='Напишите ваш комментарий'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='comment author',
         related_name='comments'
     )
-    pub_date = models.DateTimeField(auto_now_add=True)
+    pub_date = models.DateTimeField('comment date', auto_now_add=True)
 
     class Meta:
         ordering = ['-pub_date']
