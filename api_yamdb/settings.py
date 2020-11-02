@@ -98,6 +98,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
+ADMIN_EMAIL = 'admin@yamdb.fake'
+
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
