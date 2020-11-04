@@ -4,7 +4,6 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
@@ -140,27 +139,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         return title.reviews.all()
 
-    def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        if title.reviews.filter(author=self.request.user).exists():
-            raise ValidationError(detail='Only one review is allowed')
-        serializer.save(title=title, author=self.request.user)
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [ReviewCommentPermission]
 
     def get_queryset(self):
-        review = get_object_or_404(
-            Review,
-            pk=self.kwargs.get('review_id')
-        )
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         return review.comments.all()
-
-    def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review,
-            pk=self.kwargs.get('review_id')
-        )
-        serializer.save(review=review, author=self.request.user)
