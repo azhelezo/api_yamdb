@@ -85,3 +85,6 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['email', ]
 
     objects = UserManager()
+
+    class Meta:
+        ordering = ['username']
