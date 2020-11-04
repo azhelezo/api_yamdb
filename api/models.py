@@ -1,11 +1,15 @@
+import datetime
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
 
+now = datetime.datetime.now()
+
 
 class Genre(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(verbose_name='Genres', max_length=100)
     slug = models.SlugField(unique=True)
     search_fields = ['slug']
 
@@ -14,7 +18,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(verbose_name='Categories', max_length=100)
     slug = models.SlugField(unique=True)
     search_fields = ['slug']
 
@@ -23,15 +27,20 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=100)
-    year = models.IntegerField(blank=True, null=True)
-    description = models.TextField()
-    genre = models.ManyToManyField(Genre, blank=True)
+    name = models.CharField(verbose_name='Titles', db_index=True, max_length=100)
+    year = models.IntegerField(
+        verbose_name='Release year',
+        validators=[MinValueValidator(1), MaxValueValidator(int(now.year))],
+        default=None
+    )
+    description = models.TextField(verbose_name='Description')
+    genre = models.ManyToManyField(Genre, related_name='genres', blank=True)
     category = models.ForeignKey(
         Category,
-        on_delete=models.PROTECT,
-        related_name='category',
-        blank=True
+        on_delete=models.SET_NULL,
+        related_name='categories',
+        blank=True,
+        null=True
     )
     rating = models.IntegerField(null=True, default=None)
 

@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from users.urls import users_router
 
 from .views import (CategoriesViewSet, CommentViewSet, GenreViewSet,
-                    ReviewViewSet, TitleViewSet, view_self)
+                    ReviewViewSet, TitleViewSet)
 
 v1_router = DefaultRouter()
 v1_router.register(
@@ -26,6 +26,5 @@ v1_router.register('genres/<slug:slug>', GenreViewSet, basename=GenreViewSet)
 urlpatterns = [
     path('v1/', include(v1_router.urls)),
     path('v1/auth/', include('users.urls')),
-    path('v1/users/me/', view_self),
     path('v1/users/', include(users_router.urls)),
 ]
